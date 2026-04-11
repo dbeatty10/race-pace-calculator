@@ -44,7 +44,7 @@ const simpleDemandModel: PaceModel = {
 };
 
 function makeSegments(
-  count: number,
+  _count: number,
   distEach: number,
   grades: number[]
 ): Microsegment[] {

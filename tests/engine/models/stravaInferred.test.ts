@@ -36,7 +36,7 @@ describe("stravaInferredModel", () => {
   it("uphill is monotone increasing for positive grades", () => {
     const grades = [0, 2, 5, 8, 10, 15, 20];
     for (let i = 1; i < grades.length; i++) {
-      expect(mult(grades[i])).toBeGreaterThan(mult(grades[i - 1]));
+      expect(mult(grades[i]!)).toBeGreaterThan(mult(grades[i - 1]!));
     }
   });
 
