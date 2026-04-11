@@ -20,7 +20,9 @@
       "@engine/*": ["./src/engine/*"],
       "@ui/*": ["./src/ui/*"]
     },
-    "baseUrl": "."
+    "baseUrl": ".",
+    "ignoreDeprecations": "6.0"
   },
-  "include": ["src", "tests"]
+  "include": ["src", "tests"],
+  "references": [{ "path": "./tsconfig.node.json" }]
 }
