@@ -1,3 +1,6 @@
+import type { SlowdownPreset, SlowdownMode, SlowdownResult } from "@engine/slowdown/types";
+export type { SlowdownPreset, SlowdownMode, SlowdownResult };
+
 // ── Course types ──
 
 export interface RawTrackPoint {
@@ -119,6 +122,7 @@ export interface RacePlan {
   segments: SegmentResult[];
   mileSplits: MileSplit[];
   climbs: ClimbSegment[];
+  slowdown?: SlowdownResult;
   warnings: string[];
 }
 
@@ -140,4 +144,11 @@ export interface PlannerInput {
   flatEquivalentPaceSecPerMile?: number;
   /** Optional override model — used for personal calibration */
   customModel?: PaceModel;
+  /** Slowdown scenario preset. If omitted, no slowdown is applied. */
+  slowdownPreset?: SlowdownPreset;
+  slowdownMode?: SlowdownMode;
+  /** Custom slowdown parameters (when preset is "custom") */
+  slowdownOnsetMeters?: number;
+  slowdownRampMeters?: number;
+  slowdownPlateauFraction?: number;
 }
