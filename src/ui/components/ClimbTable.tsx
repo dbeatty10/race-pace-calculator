@@ -23,8 +23,8 @@ export function ClimbTable({ climbs }: ClimbTableProps) {
           </tr>
         </thead>
         <tbody>
-          {climbs.map((c, i) => (
-            <tr key={i}>
+          {climbs.map((c) => (
+            <tr key={`${c.startDistance}-${c.endDistance}`}>
               <td>{c.type === "climb" ? "Climb" : "Descent"}</td>
               <td>{metersToMiles(c.startDistance).toFixed(1)}</td>
               <td>{metersToMiles(c.endDistance).toFixed(1)}</td>

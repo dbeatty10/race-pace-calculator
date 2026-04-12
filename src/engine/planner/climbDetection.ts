@@ -31,11 +31,15 @@ export function detectClimbs(
   );
 
   // Step 2: merge flat segments into adjacent non-flat direction
+  // Flat segments are merged into the preceding non-flat direction (backward-only).
+  // Leading flat segments (before any climb or descent) remain "flat" and are
+  // excluded from all climb groups. This is intentional: a flat run before the
+  // first climb is not part of that climb.
   for (let i = 0; i < dirs.length; i++) {
     if (dirs[i] === "flat") {
       // Look backward for nearest non-flat
       for (let j = i - 1; j >= 0; j--) {
-        if (dirs[j] !== "flat") {
+        if (dirs[j] !== undefined && dirs[j] !== "flat") {
           dirs[i] = dirs[j]!;
           break;
         }
