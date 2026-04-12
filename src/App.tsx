@@ -19,12 +19,10 @@ function parseFlatPaceToSecPerMile(input: string): number {
   if (parts.length === 2) {
     const min = parseInt(parts[0]!, 10);
     const sec = parseInt(parts[1]!, 10);
-    if (isNaN(min) || isNaN(sec)) throw new Error(`Invalid pace: ${input}`);
+    if (isNaN(min) || isNaN(sec)) throw new Error(`Invalid pace "${input}" — use mm:ss format, e.g. 12:30`);
     return min * 60 + sec;
   }
-  const val = parseFloat(trimmed);
-  if (isNaN(val)) throw new Error(`Invalid pace: ${input}`);
-  return val * 60;
+  throw new Error(`Invalid pace "${input}" — use mm:ss format, e.g. 12:30`);
 }
 
 export default function App() {

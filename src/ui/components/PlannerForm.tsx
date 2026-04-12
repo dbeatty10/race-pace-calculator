@@ -90,6 +90,8 @@ export function PlannerForm({
                 {m.label}
               </option>
             ))}
+            {/* Personal calibration is a factory model, not registered in
+                ALL_MODELS, so the pipeline receives it via customModel. */}
             <option value={PERSONAL_CALIBRATION_ID}>
               Personal calibration
             </option>
