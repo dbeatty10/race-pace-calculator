@@ -92,6 +92,15 @@ export interface MileSplit {
   elapsedSec: number;
 }
 
+export interface ClimbSegment {
+  startDistance: number;
+  endDistance: number;
+  distance: number;
+  elevationChange: number;
+  avgGradePct: number;
+  type: "climb" | "descent";
+}
+
 export interface PlanSummary {
   planningMode: PlanningMode;
   modelId: string;
