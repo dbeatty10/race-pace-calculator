@@ -93,6 +93,7 @@ export interface MileSplit {
 }
 
 export interface PlanSummary {
+  planningMode: PlanningMode;
   modelId: string;
   modelLabel: string;
   targetFinishTimeSec: number;
@@ -115,10 +116,18 @@ export interface RacePlan {
 
 export type SmoothingLevel = "none" | "light" | "medium" | "heavy";
 
+export type PlanningMode = "target_time" | "target_effort";
+
 export interface PlannerInput {
   gpxData: string;
-  targetFinishTimeSec: number;
   modelId: string;
   segmentDistanceMeters?: number;
   smoothing?: SmoothingLevel;
+  planningMode?: PlanningMode;
+  /** Required when planningMode is "target_time" (default) */
+  targetFinishTimeSec?: number;
+  /** Required when planningMode is "target_effort". Flat-equivalent pace in sec/mile. */
+  flatEquivalentPaceSecPerMile?: number;
+  /** Optional override model — used for personal calibration */
+  customModel?: PaceModel;
 }

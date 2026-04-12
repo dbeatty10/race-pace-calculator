@@ -3,6 +3,7 @@ import type {
   SegmentResult,
   PaceModel,
   PlanSummary,
+  PlanningMode,
 } from "@engine/types";
 import { METERS_PER_MILE } from "@engine/utils/units";
 
@@ -10,7 +11,8 @@ export function computeSummary(
   microsegments: Microsegment[],
   results: SegmentResult[],
   model: PaceModel,
-  targetFinishTimeSec: number
+  targetFinishTimeSec: number,
+  planningMode: PlanningMode = "target_time"
 ): PlanSummary {
   const last = microsegments[microsegments.length - 1]!;
   const courseLengthMeters = last.endDistance;
@@ -43,6 +45,7 @@ export function computeSummary(
   const flatEquivalentPaceSecPerMile = flatEqPaceSecPerMeter * METERS_PER_MILE;
 
   return {
+    planningMode,
     modelId: model.id,
     modelLabel: model.label,
     targetFinishTimeSec,
