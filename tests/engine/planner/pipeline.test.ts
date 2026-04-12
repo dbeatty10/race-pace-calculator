@@ -84,4 +84,18 @@ describe("generateRacePlan", () => {
     });
     expect(plan.warnings.some((w) => w.includes("user-inferred"))).toBe(true);
   });
+
+  it("generates a plan in target_effort mode", () => {
+    // 9:00/mile = 540 sec/mile flat equivalent pace
+    const plan = generateRacePlan({
+      gpxData: SIMPLE_HILL_GPX,
+      planningMode: "target_effort",
+      flatEquivalentPaceSecPerMile: 540,
+      modelId: "minetti",
+    });
+
+    expect(plan.summary.planningMode).toBe("target_effort");
+    expect(plan.summary.computedFinishTimeSec).toBeGreaterThan(0);
+    expect(plan.mileSplits.length).toBeGreaterThan(0);
+  });
 });

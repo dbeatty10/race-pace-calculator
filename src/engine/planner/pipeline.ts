@@ -1,16 +1,32 @@
 import type { PlannerInput, RacePlan } from "@engine/types";
 import { parseGpx } from "@engine/course/parseGpx";
-import { rawPointsToCoursePoints, resampleToMicrosegments } from "@engine/course/resampleCourse";
+import {
+  rawPointsToCoursePoints,
+  resampleToMicrosegments,
+} from "@engine/course/resampleCourse";
 import { smoothElevation } from "@engine/course/smoothElevation";
 import { getModel } from "@engine/models/registry";
 import { solveWholeCourse } from "./solver";
+import { propagateEffort } from "./targetEffort";
 import { aggregateMileSplits } from "./aggregateMiles";
 import { computeSummary } from "./summary";
+import { paceSecPerMileToSpeedMps } from "@engine/utils/units";
 
 const DEFAULT_SEGMENT_DISTANCE = 160.934; // ~0.1 miles in meters
 
 export function generateRacePlan(input: PlannerInput): RacePlan {
   const warnings: string[] = [];
+  const mode = input.planningMode ?? "target_time";
+
+  // Validate mode-specific inputs
+  if (mode === "target_time" && input.targetFinishTimeSec == null) {
+    throw new Error("targetFinishTimeSec is required for target_time mode");
+  }
+  if (mode === "target_effort" && input.flatEquivalentPaceSecPerMile == null) {
+    throw new Error(
+      "flatEquivalentPaceSecPerMile is required for target_effort mode"
+    );
+  }
 
   // 1. Parse GPX
   const rawPoints = parseGpx(input.gpxData);
@@ -26,9 +42,8 @@ export function generateRacePlan(input: PlannerInput): RacePlan {
   const microsegments = resampleToMicrosegments(smoothed, segmentDist);
 
   // 5. Get model
-  const model = getModel(input.modelId);
+  const model = input.customModel ?? getModel(input.modelId);
 
-  // Collect model warning
   if (model.warning) {
     warnings.push(model.warning);
   }
@@ -43,12 +58,22 @@ export function generateRacePlan(input: PlannerInput): RacePlan {
     );
   }
 
-  // 6. Solve
-  const segmentResults = solveWholeCourse(
-    microsegments,
-    model,
-    input.targetFinishTimeSec
-  );
+  // 6. Solve based on planning mode
+  let segmentResults;
+  let targetTimeSec: number;
+
+  if (mode === "target_effort") {
+    const flatSpeedMps = paceSecPerMileToSpeedMps(
+      input.flatEquivalentPaceSecPerMile!
+    );
+    segmentResults = propagateEffort(microsegments, model, flatSpeedMps);
+    // In target effort mode, the "target" is the computed projection
+    targetTimeSec =
+      segmentResults[segmentResults.length - 1]!.cumulativeElapsedSec;
+  } else {
+    targetTimeSec = input.targetFinishTimeSec!;
+    segmentResults = solveWholeCourse(microsegments, model, targetTimeSec);
+  }
 
   // 7. Aggregate mile splits
   const mileSplits = aggregateMileSplits(segmentResults);
@@ -58,7 +83,8 @@ export function generateRacePlan(input: PlannerInput): RacePlan {
     microsegments,
     segmentResults,
     model,
-    input.targetFinishTimeSec
+    targetTimeSec,
+    mode
   );
 
   return { summary, segments: segmentResults, mileSplits, warnings };
