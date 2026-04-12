@@ -114,6 +114,9 @@ export function generateRacePlan(input: PlannerInput): RacePlan {
       );
     }
 
+    if (sdMode === "compensate_to_target" && mode !== "target_time") {
+      warnings.push("Compensate-to-target slowdown mode requires target-time planning mode. Falling back to forecast mode.");
+    }
     if (sdMode === "compensate_to_target" && mode === "target_time") {
       const compResult = compensateToTarget(microsegments, model, targetTimeSec, sdConfig);
       if (compResult.warning) warnings.push(compResult.warning);

@@ -38,7 +38,21 @@ export function compensateToTarget(
       50
     );
   } catch {
+    // Bisect failed — root not bracketed (slowdown too extreme for the search range).
+    // Fall back to user target; the warning below will fire since internal === user target
+    // is 0% faster, which is not < 0.8 — so add an explicit warning here instead.
     internalTargetTimeSec = userTargetTimeSec;
+    // Return early with a warning — compensation could not converge
+    const baselineSegs = solveWholeCourse(microsegments, model, userTargetTimeSec);
+    const adjSegs = applySlowdown(baselineSegs, slowdownConfig);
+    const lastAdj = adjSegs[adjSegs.length - 1]!;
+    return {
+      internalTargetTimeSec: userTargetTimeSec,
+      baselineSegments: baselineSegs,
+      adjustedSegments: adjSegs,
+      adjustedFinishTimeSec: lastAdj.cumulativeAdjustedElapsedSec,
+      warning: "Could not converge on a compensation target for this slowdown scenario. The slowdown may be too extreme. Showing forecast mode instead.",
+    };
   }
 
   const baselineSegments = solveWholeCourse(microsegments, model, internalTargetTimeSec);

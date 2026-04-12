@@ -1,5 +1,4 @@
 import type { SlowdownPreset, SlowdownMode, SlowdownResult } from "@engine/slowdown/types";
-export type { SlowdownPreset, SlowdownMode, SlowdownResult };
 
 // ── Course types ──
 
