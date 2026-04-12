@@ -118,6 +118,7 @@ export interface RacePlan {
   summary: PlanSummary;
   segments: SegmentResult[];
   mileSplits: MileSplit[];
+  climbs: ClimbSegment[];
   warnings: string[];
 }
 

@@ -11,6 +11,7 @@ import { CourseUpload } from "@ui/components/CourseUpload";
 import { PlannerForm } from "@ui/components/PlannerForm";
 import { SummaryPanel } from "@ui/components/SummaryPanel";
 import { MileSplitsTable } from "@ui/components/MileSplitsTable";
+import { ClimbTable } from "@ui/components/ClimbTable";
 import "./App.css";
 
 function parseFlatPaceToSecPerMile(input: string): number {
@@ -122,6 +123,7 @@ export default function App() {
           ))}
           <SummaryPanel summary={plan.summary} />
           <MileSplitsTable splits={plan.mileSplits} />
+          <ClimbTable climbs={plan.climbs} />
         </>
       )}
     </div>

@@ -10,6 +10,7 @@ import { solveWholeCourse } from "./solver";
 import { propagateEffort } from "./targetEffort";
 import { aggregateMileSplits } from "./aggregateMiles";
 import { computeSummary } from "./summary";
+import { detectClimbs } from "./climbDetection";
 import { paceSecPerMileToSpeedMps } from "@engine/utils/units";
 
 const DEFAULT_SEGMENT_DISTANCE = 160.934; // ~0.1 miles in meters
@@ -78,7 +79,10 @@ export function generateRacePlan(input: PlannerInput): RacePlan {
   // 7. Aggregate mile splits
   const mileSplits = aggregateMileSplits(segmentResults);
 
-  // 8. Compute summary
+  // 8. Detect climbs
+  const climbs = detectClimbs(microsegments);
+
+  // 9. Compute summary
   const summary = computeSummary(
     microsegments,
     segmentResults,
@@ -87,5 +91,5 @@ export function generateRacePlan(input: PlannerInput): RacePlan {
     mode
   );
 
-  return { summary, segments: segmentResults, mileSplits, warnings };
+  return { summary, segments: segmentResults, mileSplits, climbs, warnings };
 }
