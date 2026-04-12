@@ -10,6 +10,8 @@ interface SummaryPanelProps {
 }
 
 export function SummaryPanel({ summary }: SummaryPanelProps) {
+  const isEffortMode = summary.planningMode === "target_effort";
+
   return (
     <div>
       <h2>Plan Summary</h2>
@@ -17,11 +19,15 @@ export function SummaryPanel({ summary }: SummaryPanelProps) {
         <dt>Hill model</dt>
         <dd>{summary.modelLabel}</dd>
 
-        <dt>Target finish time</dt>
+        <dt>{isEffortMode ? "Projected finish time" : "Target finish time"}</dt>
         <dd>{formatElapsedTime(summary.targetFinishTimeSec)}</dd>
 
-        <dt>Computed finish time</dt>
-        <dd>{formatElapsedTime(summary.computedFinishTimeSec)}</dd>
+        {!isEffortMode && (
+          <>
+            <dt>Computed finish time</dt>
+            <dd>{formatElapsedTime(summary.computedFinishTimeSec)}</dd>
+          </>
+        )}
 
         <dt>Course length</dt>
         <dd>{metersToMiles(summary.courseLengthMeters).toFixed(2)} mi</dd>
@@ -32,7 +38,11 @@ export function SummaryPanel({ summary }: SummaryPanelProps) {
         <dt>Total descent</dt>
         <dd>{metersToFeet(summary.totalDescentMeters).toFixed(0)} ft</dd>
 
-        <dt>Flat-equivalent pace</dt>
+        <dt>
+          {isEffortMode
+            ? "Input flat-equivalent pace"
+            : "Flat-equivalent pace"}
+        </dt>
         <dd>{formatPace(summary.flatEquivalentPaceSecPerMile)} /mi</dd>
       </dl>
     </div>
