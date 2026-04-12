@@ -15,6 +15,7 @@ import { MileSplitsTable } from "@ui/components/MileSplitsTable";
 import { ClimbTable } from "@ui/components/ClimbTable";
 import { SlowdownControls } from "@ui/components/SlowdownControls";
 import { SlowdownSplitsTable } from "@ui/components/SlowdownSplitsTable";
+import { ExportControls } from "@ui/components/ExportControls";
 import "./App.css";
 
 function parseFlatPaceToSecPerMile(input: string): number {
@@ -177,6 +178,7 @@ export default function App() {
               <SlowdownSplitsTable splits={plan.slowdown.adjustedMileSplits} />
             </>
           )}
+          <ExportControls plan={plan} />
         </>
       )}
     </div>
