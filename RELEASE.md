@@ -120,22 +120,26 @@ So your scripts section looks like:
 }
 ```
 
-### Step 4: Configure GitHub Pages settings
+### Step 4: Deploy
 
-1. Go to **Settings > Pages**
-2. Set **Source** to **Deploy from a branch**
-3. Select the **gh-pages** branch and **/ (root)** folder
-4. Click **Save**
-
-### Step 5: Deploy
-
-Whenever you're ready to deploy:
+Run the deploy command to build and create the `gh-pages` branch:
 
 ```bash
 npm run deploy
 ```
 
-This builds the app and pushes it to the `gh-pages` branch. Your site will be live at: `https://dbeatty10.github.io/race-pace-calculator/`
+This builds the app and pushes it to a new `gh-pages` branch on GitHub.
+
+### Step 5: Configure GitHub Pages settings
+
+Once the `gh-pages` branch exists (after step 4):
+
+1. Go to your GitHub repository settings: **Settings > Pages**
+2. Set **Source** to **Deploy from a branch**
+3. Select the **gh-pages** branch and **/ (root)** folder
+4. Click **Save**
+
+Your site will be live at: `https://dbeatty10.github.io/race-pace-calculator/`
 
 ---
 
