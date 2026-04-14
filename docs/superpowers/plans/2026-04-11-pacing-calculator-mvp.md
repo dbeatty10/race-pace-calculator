@@ -13,7 +13,7 @@
 ## File Structure
 
 ```
-pacing-project/
+race-pace-calculator/
   package.json
   tsconfig.json
   tsconfig.node.json
@@ -92,7 +92,6 @@ pacing-project/
 - [ ] **Step 1: Initialize project and install dependencies**
 
 ```bash
-cd /Users/dbeatty/personal/pacing-project
 npm init -y
 npm install react react-dom
 npm install -D vite @vitejs/plugin-react typescript vitest jsdom @types/react @types/react-dom
