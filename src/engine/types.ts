@@ -1,3 +1,5 @@
+import type { SlowdownPreset, SlowdownMode, SlowdownResult } from "@engine/slowdown/types";
+
 // ── Course types ──
 
 export interface RawTrackPoint {
@@ -92,7 +94,17 @@ export interface MileSplit {
   elapsedSec: number;
 }
 
+export interface ClimbSegment {
+  startDistance: number;
+  endDistance: number;
+  distance: number;
+  elevationChange: number;
+  avgGradePct: number;
+  type: "climb" | "descent";
+}
+
 export interface PlanSummary {
+  planningMode: PlanningMode;
   modelId: string;
   modelLabel: string;
   targetFinishTimeSec: number;
@@ -108,6 +120,8 @@ export interface RacePlan {
   summary: PlanSummary;
   segments: SegmentResult[];
   mileSplits: MileSplit[];
+  climbs: ClimbSegment[];
+  slowdown?: SlowdownResult;
   warnings: string[];
 }
 
@@ -115,10 +129,25 @@ export interface RacePlan {
 
 export type SmoothingLevel = "none" | "light" | "medium" | "heavy";
 
+export type PlanningMode = "target_time" | "target_effort";
+
 export interface PlannerInput {
   gpxData: string;
-  targetFinishTimeSec: number;
   modelId: string;
   segmentDistanceMeters?: number;
   smoothing?: SmoothingLevel;
+  planningMode?: PlanningMode;
+  /** Required when planningMode is "target_time" (default) */
+  targetFinishTimeSec?: number;
+  /** Required when planningMode is "target_effort". Flat-equivalent pace in sec/mile. */
+  flatEquivalentPaceSecPerMile?: number;
+  /** Optional override model — used for personal calibration */
+  customModel?: PaceModel;
+  /** Slowdown scenario preset. If omitted, no slowdown is applied. */
+  slowdownPreset?: SlowdownPreset;
+  slowdownMode?: SlowdownMode;
+  /** Custom slowdown parameters (when preset is "custom") */
+  slowdownOnsetMeters?: number;
+  slowdownRampMeters?: number;
+  slowdownPlateauFraction?: number;
 }
