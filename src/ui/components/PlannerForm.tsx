@@ -1,6 +1,75 @@
 import type { PlanningMode, SmoothingLevel } from "@engine/types";
 import { listModels } from "@engine/models/registry";
 import { PERSONAL_CALIBRATION_ID } from "@engine/models/personalCalibration";
+import { InfoTooltip } from "./InfoTooltip";
+
+const PLANNING_MODE_TOOLTIP = (
+  <>
+    <p>
+      <strong>Target finish time:</strong> You set a goal time (e.g. 3:45:00).
+      The calculator solves for the flat-equivalent pace that — after applying
+      the hill model to every segment — sums to exactly that finish time.
+    </p>
+    <p>
+      <strong>Target effort (flat pace):</strong> You set a flat-equivalent pace
+      (e.g. 12:30/mi) that represents your intended effort level. The hill model
+      is applied directly to each segment without targeting a total time —
+      uphills slow you down, downhills speed you up. Use this when you want to
+      pace by feel rather than clock.
+    </p>
+  </>
+);
+
+const HILL_MODEL_TOOLTIP = (
+  <>
+    <p>
+      <strong>Strava (default):</strong> Reverse-engineered from Strava's
+      Grade-Adjusted Pace, derived from millions of real runner GPS + heart-rate
+      records (Robb 2017). Conservative on descents.
+    </p>
+    <p>
+      <strong>Minetti:</strong> From lab treadmill measurements of 8 subjects at
+      grades −45% to +45% (Minetti et al. 2002). Computes the speed of equal
+      metabolic cost to flat running. Strong evidence base, but calibrated on
+      short efforts.
+    </p>
+    <p>
+      <strong>RE3:</strong> Running Energy Expenditure Estimation (UMass). More
+      recent than Minetti. More aggressive downhill benefit.
+    </p>
+    <p>
+      <strong>ultraPacer:</strong> Piecewise model from ultrapacer.com. Quadratic
+      from −22% to +16% grade, linear outside. Predicts larger penalties for
+      very steep uphills.
+    </p>
+    <p>
+      <strong>Personal calibration:</strong> Enter your own [grade%, multiplier]
+      pairs from your race data. Requires at least 2 points. Example: "8, 1.4"
+      means at 8% grade you run 1.4× slower than flat.
+    </p>
+  </>
+);
+
+const SMOOTHING_TOOLTIP = (
+  <>
+    <p>
+      <strong>None:</strong> Raw GPS elevation exactly as recorded. May contain
+      noise from GPS accuracy limits.
+    </p>
+    <p>
+      <strong>Light:</strong> Mild filter. Removes small GPS artifacts while
+      preserving most real elevation features. Good for clean GPS data.
+    </p>
+    <p>
+      <strong>Medium:</strong> Moderate filter. Removes most GPS noise and small
+      terrain bumps. Best for most race courses.
+    </p>
+    <p>
+      <strong>Heavy:</strong> Aggressive filter. Best for very noisy data
+      (canyons, dense forest, low-quality devices).
+    </p>
+  </>
+);
 
 interface PlannerFormProps {
   planningMode: PlanningMode;
@@ -41,7 +110,10 @@ export function PlannerForm({
     <div>
       <div className="form-row">
         <div className="form-group">
-          <label htmlFor="planning-mode">Planning mode</label>
+          <label htmlFor="planning-mode">
+            Planning mode
+            <InfoTooltip content={PLANNING_MODE_TOOLTIP} />
+          </label>
           <select
             id="planning-mode"
             value={planningMode}
@@ -79,7 +151,10 @@ export function PlannerForm({
         )}
 
         <div className="form-group">
-          <label htmlFor="model-select">Hill model</label>
+          <label htmlFor="model-select">
+            Hill model
+            <InfoTooltip content={HILL_MODEL_TOOLTIP} />
+          </label>
           <select
             id="model-select"
             value={modelId}
@@ -99,7 +174,10 @@ export function PlannerForm({
         </div>
 
         <div className="form-group">
-          <label htmlFor="smoothing-select">Elevation smoothing</label>
+          <label htmlFor="smoothing-select">
+            Elevation smoothing
+            <InfoTooltip content={SMOOTHING_TOOLTIP} />
+          </label>
           <select
             id="smoothing-select"
             value={smoothing}

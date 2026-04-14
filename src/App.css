@@ -99,3 +99,72 @@ button:disabled {
   margin: 0.5rem 0;
   font-size: 0.9rem;
 }
+
+/* Info Tooltips */
+
+.info-tooltip-wrapper {
+  position: relative;
+  display: inline-block;
+  margin-left: 0.35rem;
+  vertical-align: middle;
+}
+
+.info-tooltip-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1em;
+  height: 1.1em;
+  border-radius: 50%;
+  border: 1.5px solid #6b7280;
+  color: #6b7280;
+  font-size: 0.75rem;
+  font-weight: bold;
+  font-style: normal;
+  cursor: default;
+  user-select: none;
+  line-height: 1;
+}
+
+.info-tooltip-wrapper:hover .info-tooltip-icon {
+  border-color: #2563eb;
+  color: #2563eb;
+}
+
+.info-tooltip-content {
+  display: none;
+  position: absolute;
+  z-index: 100;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 0.7rem 0.85rem;
+  font-size: 0.78rem;
+  font-weight: normal;
+  line-height: 1.55;
+  color: #111827;
+  min-width: 240px;
+  max-width: 340px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  white-space: normal;
+  pointer-events: none;
+}
+
+.info-tooltip-wrapper:hover .info-tooltip-content {
+  display: block;
+}
+
+.info-tooltip-content strong {
+  font-weight: 700;
+}
+
+.info-tooltip-content p {
+  margin: 0 0 0.45rem 0;
+}
+
+.info-tooltip-content p:last-child {
+  margin-bottom: 0;
+}
