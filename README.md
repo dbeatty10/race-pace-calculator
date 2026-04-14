@@ -28,7 +28,7 @@ A web-based tool for planning your race paces accounting for hills. Designed for
 
 ### Race Strategy
 
-- **Slowdown Scenarios** — Forecast how "hitting the wall" would affect your splits:
+- **Slowdown Scenarios** — Forecast how ["hitting the wall"](https://pmc.ncbi.nlm.nih.gov/articles/PMC8133477/) would affect your splits:
   - Controlled / Tiny Late Fade
   - Gentle Late Fade
   - Moderate Late Fade
@@ -39,12 +39,12 @@ A web-based tool for planning your race paces accounting for hills. Designed for
 
 - **Two Slowdown Modes**:
   - **Forecast** — See adjusted splits if you fade
-  - **Compensate to Target** — Automatically adjusts your baseline plan to still achieve your goal time taking the slowdown into account
+  - **Compensate to Target** — Automatically adjusts your baseline plan to still achieve your goal time taking the slowdown into account. This mode is **not** recommended since going too fast increases the likelihood of an even worse slowdown that you anticipated!
 
 ### Export & Results
 
 - **Mile-by-Mile Splits** — See pace and cumulative time for every mile
-- **Baseline vs Adjusted Splits** — Compare planned splits vs. selected slowdown scenario
+- **Planned vs Slowed Splits** — Compare planned splits vs. splits in the selected slowdown scenario
 - **CSV Export** — Download splits for spreadsheets
 - **JSON Export** — Export full plan data (summary, splits, climbs)
 - **Wristband Format** — Compact fixed-width output for printing/copying to a race day card
