@@ -64,17 +64,23 @@ export default defineConfig({
 });
 ```
 
-### Step 3: Verify GitHub Pages settings
+### Step 3: Trigger the workflow
 
-1. Go to your GitHub repository settings
-2. Navigate to **Settings > Pages**
-3. Verify that **Source** is set to **Deploy from a branch**
-4. Select the **gh-pages** branch and **/ (root)** folder
-5. Click **Save**
+Push your code to `main`:
 
-Your site will be live at: `https://dbeatty10.github.io/race-pace-calculator/`
+```bash
+git push origin main
+```
 
-(The `gh-pages` branch is created automatically by the GitHub Actions workflow.)
+The GitHub Actions workflow automatically:
+1. Runs tests
+2. Builds the app
+3. Pushes to the `gh-pages` branch
+4. GitHub Pages auto-detects the new branch and goes live
+
+Your site will be live within 2-5 minutes at: **`https://dbeatty10.github.io/race-pace-calculator/`**
+
+**Subsequent deployments** are automatic: just push to `main` and the workflow runs again.
 
 ---
 
@@ -122,24 +128,23 @@ So your scripts section looks like:
 
 ### Step 4: Deploy
 
-Run the deploy command to build and create the `gh-pages` branch:
+Run the deploy command to build and publish your site:
 
 ```bash
 npm run deploy
 ```
 
-This builds the app and pushes it to a new `gh-pages` branch on GitHub.
+This:
+1. Builds the app for production
+2. Creates a `gh-pages` branch on GitHub
+3. Pushes the built files to that branch
+4. **Automatically configures GitHub Pages** (GitHub detects the new `gh-pages` branch and enables Pages deployment)
 
-### Step 5: Configure GitHub Pages settings
+Your site will be live within 1-2 minutes at: **`https://dbeatty10.github.io/race-pace-calculator/`**
 
-Once the `gh-pages` branch exists (after step 4):
+That's it! No manual GitHub Pages configuration needed — `npm run deploy` handles everything.
 
-1. Go to your GitHub repository settings: **Settings > Pages**
-2. Set **Source** to **Deploy from a branch**
-3. Select the **gh-pages** branch and **/ (root)** folder
-4. Click **Save**
-
-Your site will be live at: `https://dbeatty10.github.io/race-pace-calculator/`
+**Subsequent deployments** are even faster: just run `npm run deploy` again whenever you want to update your live site.
 
 ---
 
