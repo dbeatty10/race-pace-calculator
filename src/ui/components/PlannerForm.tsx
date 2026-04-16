@@ -43,8 +43,15 @@ const HILL_MODEL_TOOLTIP = (
       very steep uphills.
     </p>
     <p>
+      <strong>The Pacing Project:</strong> Speed-dependent cubic model
+      reconstructed from The Pacing Project&apos;s published calculator outputs.
+      The hill penalty varies with both grade and your flat running speed —
+      faster runners lose proportionally more time on uphills. Grade range ±26%.
+      Not official; see model warning for details.
+    </p>
+    <p>
       <strong>Personal calibration:</strong> Enter your own [grade%, multiplier]
-      pairs from your race data. Requires at least 2 points. Example: "8, 1.4"
+      pairs from your race data. Requires at least 2 points. Example: &quot;8, 1.4&quot;
       means at 8% grade you run 1.4× slower than flat.
     </p>
   </>

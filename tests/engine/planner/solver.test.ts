@@ -125,3 +125,57 @@ describe("solveWholeCourse — demand model", () => {
     expect(total).toBeCloseTo(2000, 0);
   });
 });
+
+// Speed-dependent multiplier model: multiplier varies with both grade and speed
+const speedDependentModel: PaceModel = {
+  id: "test_speed_dependent",
+  label: "Test Speed-Dependent",
+  kind: "direct_multiplier",
+  provenance: "official",
+  speedDependent: true,
+  gradePctMin: -50,
+  gradePctMax: 50,
+  supportsDownhill: true,
+  notes: "",
+  multiplier: (g, ctx) => {
+    const vMph = (ctx?.refFlatSpeedMps ?? 3.0) * 2.237;
+    return 1 + (g / 100) * (0.5 + 0.05 * vMph);
+  },
+};
+
+describe("solveWholeCourse — speed-dependent multiplier", () => {
+  it("total time matches target within tolerance", () => {
+    const segs = makeSegments(5, 1000, [0, 5, -3, 8, 2]);
+    const result = solveWholeCourse(segs, speedDependentModel, 3000);
+    const total = result[result.length - 1]!.cumulativeElapsedSec;
+    expect(total).toBeCloseTo(3000, 0);
+  });
+
+  it("uphill segments are slower than flat segments", () => {
+    const segs = makeSegments(2, 1000, [0, 10]);
+    const result = solveWholeCourse(segs, speedDependentModel, 1000);
+    expect(result[1]!.targetPaceSecPerMeter).toBeGreaterThan(
+      result[0]!.targetPaceSecPerMeter
+    );
+  });
+
+  it("cumulative elapsed increases monotonically", () => {
+    const segs = makeSegments(5, 1000, [0, 5, -3, 8, 2]);
+    const result = solveWholeCourse(segs, speedDependentModel, 3000);
+    for (let i = 1; i < result.length; i++) {
+      expect(result[i]!.cumulativeElapsedSec).toBeGreaterThan(
+        result[i - 1]!.cumulativeElapsedSec
+      );
+    }
+  });
+
+  it("flat course matches non-speed-dependent behavior", () => {
+    // On a flat course (all grades 0), M(0,v) should be 1 for both model types
+    const segs = makeSegments(5, 1000, Array(5).fill(0));
+    const sdResult = solveWholeCourse(segs, speedDependentModel, 2500);
+    const flatResult = solveWholeCourse(segs, flatModel, 2500);
+    const sdTotal = sdResult[sdResult.length - 1]!.cumulativeElapsedSec;
+    const flatTotal = flatResult[flatResult.length - 1]!.cumulativeElapsedSec;
+    expect(sdTotal).toBeCloseTo(flatTotal, 0);
+  });
+});

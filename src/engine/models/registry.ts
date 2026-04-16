@@ -3,12 +3,14 @@ import { stravaInferredModel } from "./stravaInferred";
 import { minettiModel } from "./minetti";
 import { re3Model } from "./re3";
 import { ultrapacerModel } from "./ultrapacer";
+import { thePacingProjectModel } from "./thePacingProject";
 
 const ALL_MODELS: PaceModel[] = [
   stravaInferredModel,
   minettiModel,
   re3Model,
   ultrapacerModel,
+  thePacingProjectModel,
 ];
 
 const MODEL_MAP = new Map(ALL_MODELS.map((m) => [m.id, m]));

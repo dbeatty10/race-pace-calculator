@@ -7,10 +7,13 @@ function propagateMultiplier(
 ): SegmentResult[] {
   const mult = model.multiplier!;
   const flatPaceSecPerMeter = 1 / flatSpeedMps;
+  const ctx = model.speedDependent
+    ? { refFlatSpeedMps: flatSpeedMps }
+    : undefined;
 
   let cumElapsed = 0;
   return segments.map((seg, i) => {
-    const m = mult(seg.avgGradePct);
+    const m = mult(seg.avgGradePct, ctx);
     const pace = flatPaceSecPerMeter * m;
     const time = seg.distance * pace;
     cumElapsed += time;

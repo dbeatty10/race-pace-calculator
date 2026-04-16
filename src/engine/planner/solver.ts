@@ -36,6 +36,53 @@ function solveDirectMultiplier(
   });
 }
 
+function solveSpeedDependentMultiplier(
+  segments: Microsegment[],
+  model: PaceModel,
+  targetTimeSec: number
+): SegmentResult[] {
+  const mult = model.multiplier!;
+
+  function totalTimeForFlatSpeed(flatSpeedMps: number): number {
+    const ctx = { refFlatSpeedMps: flatSpeedMps };
+    const flatPace = 1 / flatSpeedMps;
+    let total = 0;
+    for (const seg of segments) {
+      total += seg.distance * flatPace * mult(seg.avgGradePct, ctx);
+    }
+    return total;
+  }
+
+  const flatSpeedMps = bisect(
+    (v) => totalTimeForFlatSpeed(v) - targetTimeSec,
+    0.3, // ~55 min/mi
+    10.0 // ~2:40/mi
+  );
+
+  const ctx = { refFlatSpeedMps: flatSpeedMps };
+  const flatPace = 1 / flatSpeedMps;
+  let cumElapsed = 0;
+
+  return segments.map((seg, i) => {
+    const m = mult(seg.avgGradePct, ctx);
+    const pace = flatPace * m;
+    const time = seg.distance * pace;
+    cumElapsed += time;
+
+    return {
+      segmentId: i,
+      startDistance: seg.startDistance,
+      endDistance: seg.endDistance,
+      distance: seg.distance,
+      avgGradePct: seg.avgGradePct,
+      modelValue: m,
+      targetPaceSecPerMeter: pace,
+      targetTimeSec: time,
+      cumulativeElapsedSec: cumElapsed,
+    };
+  });
+}
+
 function solveDemandModel(
   segments: Microsegment[],
   model: PaceModel,
@@ -92,6 +139,9 @@ export function solveWholeCourse(
   }
 
   if (model.multiplier) {
+    if (model.speedDependent) {
+      return solveSpeedDependentMultiplier(segments, model, targetTimeSec);
+    }
     return solveDirectMultiplier(segments, model, targetTimeSec);
   }
 

@@ -55,6 +55,9 @@ export interface PaceModel {
   notes: string;
   warning?: string;
 
+  /** If true, the multiplier depends on flat reference speed via PaceModelContext */
+  speedDependent?: boolean;
+
   /**
    * For direct_multiplier and interpolation_model kinds.
    * Returns multiplier M such that hillPace = flatPace * M.
