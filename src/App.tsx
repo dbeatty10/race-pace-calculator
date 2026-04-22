@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import type { RacePlan, PlanningMode, SmoothingLevel } from "@engine/types";
+import type { RacePlan, PlanningMode, SmoothingLevel, SplitIntervalMode } from "@engine/types";
 import { parseTargetTime, formatElapsedTime } from "@engine/utils/paceFormatting";
 import { generateRacePlan } from "@engine/planner/pipeline";
 import {
@@ -8,6 +8,7 @@ import {
   PERSONAL_CALIBRATION_ID,
 } from "@engine/models/personalCalibration";
 import type { SlowdownPreset, SlowdownMode } from "@engine/slowdown/types";
+import { METERS_PER_MILE } from "@engine/utils/units";
 import { CourseUpload } from "@ui/components/CourseUpload";
 import { PlannerForm } from "@ui/components/PlannerForm";
 import { SummaryPanel } from "@ui/components/SummaryPanel";
@@ -30,6 +31,15 @@ function parseFlatPaceToSecPerMile(input: string): number {
   throw new Error(`Invalid pace "${input}" — use mm:ss format, e.g. 12:30`);
 }
 
+function parseCustomSplits(text: string, unitFactor: number): number[] {
+  return text
+    .split(",")
+    .map((s) => parseFloat(s.trim()))
+    .filter((n) => Number.isFinite(n) && n > 0)
+    .sort((a, b) => a - b)
+    .map((d) => d * unitFactor);
+}
+
 export default function App() {
   const [gpxData, setGpxData] = useState<string | null>(null);
   const [fileName, setFileName] = useState("");
@@ -39,6 +49,8 @@ export default function App() {
   const [modelId, setModelId] = useState("strava_inferred");
   const [calibrationText, setCalibrationText] = useState("");
   const [smoothing, setSmoothing] = useState<SmoothingLevel>("light");
+  const [splitMode, setSplitMode] = useState<SplitIntervalMode>("mile");
+  const [customSplitText, setCustomSplitText] = useState("");
   const [plan, setPlan] = useState<RacePlan | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [slowdownPreset, setSlowdownPreset] = useState<SlowdownPreset>("none");
@@ -64,12 +76,21 @@ export default function App() {
         customModel = createPersonalCalibrationModel(points);
       }
 
+      const customSplitDistancesM =
+        splitMode === "custom_miles"
+          ? parseCustomSplits(customSplitText, METERS_PER_MILE)
+          : splitMode === "custom_km"
+          ? parseCustomSplits(customSplitText, 1000)
+          : undefined;
+
       const result = generateRacePlan({
         gpxData,
         modelId,
         customModel,
         smoothing,
         planningMode,
+        splitMode,
+        customSplitDistancesM,
         targetFinishTimeSec:
           planningMode === "target_time"
             ? parseTargetTime(targetTime)
@@ -107,6 +128,8 @@ export default function App() {
     modelId,
     calibrationText,
     smoothing,
+    splitMode,
+    customSplitText,
     slowdownPreset,
     slowdownMode,
     customOnsetKm,
@@ -136,6 +159,10 @@ export default function App() {
         onCalibrationTextChange={setCalibrationText}
         smoothing={smoothing}
         onSmoothingChange={setSmoothing}
+        splitMode={splitMode}
+        onSplitModeChange={setSplitMode}
+        customSplitText={customSplitText}
+        onCustomSplitTextChange={setCustomSplitText}
         canRun={canRun}
         onRun={handleRun}
       />

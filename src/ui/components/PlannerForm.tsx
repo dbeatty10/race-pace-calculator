@@ -1,4 +1,4 @@
-import type { PlanningMode, SmoothingLevel } from "@engine/types";
+import type { PlanningMode, SmoothingLevel, SplitIntervalMode } from "@engine/types";
 import { listModels } from "@engine/models/registry";
 import { PERSONAL_CALIBRATION_ID } from "@engine/models/personalCalibration";
 import { InfoTooltip } from "./InfoTooltip";
@@ -78,6 +78,26 @@ const SMOOTHING_TOOLTIP = (
   </>
 );
 
+const SPLIT_INTERVAL_TOOLTIP = (
+  <>
+    <p>
+      <strong>Each mile:</strong> One split row per mile. Works for any
+      distance.
+    </p>
+    <p>
+      <strong>Each 5K (marathon checkpoints):</strong> Classic marathon
+      landmarks — 5K, 10K, 15K, 20K, Half, 25K, 30K, and mile markers 20
+      through 26.2. Only meaningful for marathon-distance courses (±0.5 mi).
+      Falls back to every-5K boundaries on other distances.
+    </p>
+    <p>
+      <strong>Custom (miles) / Custom (km):</strong> Enter comma-separated
+      decimal distances without units, e.g. "13.1, 20, 26.2" for miles or
+      "21.1, 30, 42.2" for km. Distances are sorted automatically.
+    </p>
+  </>
+);
+
 interface PlannerFormProps {
   planningMode: PlanningMode;
   onPlanningModeChange: (mode: PlanningMode) => void;
@@ -91,6 +111,10 @@ interface PlannerFormProps {
   onCalibrationTextChange: (value: string) => void;
   smoothing: SmoothingLevel;
   onSmoothingChange: (value: SmoothingLevel) => void;
+  splitMode: SplitIntervalMode;
+  onSplitModeChange: (value: SplitIntervalMode) => void;
+  customSplitText: string;
+  onCustomSplitTextChange: (value: string) => void;
   canRun: boolean;
   onRun: () => void;
 }
@@ -108,6 +132,10 @@ export function PlannerForm({
   onCalibrationTextChange,
   smoothing,
   onSmoothingChange,
+  splitMode,
+  onSplitModeChange,
+  customSplitText,
+  onCustomSplitTextChange,
   canRun,
   onRun,
 }: PlannerFormProps) {
@@ -198,7 +226,46 @@ export function PlannerForm({
             <option value="heavy">Heavy</option>
           </select>
         </div>
+
+        <div className="form-group">
+          <label htmlFor="split-mode">
+            Split intervals
+            <InfoTooltip content={SPLIT_INTERVAL_TOOLTIP} />
+          </label>
+          <select
+            id="split-mode"
+            value={splitMode}
+            onChange={(e) =>
+              onSplitModeChange(e.target.value as SplitIntervalMode)
+            }
+          >
+            <option value="mile">Each mile</option>
+            <option value="5k">Each 5K (marathon checkpoints)</option>
+            <option value="custom_miles">Custom (miles)</option>
+            <option value="custom_km">Custom (kilometers)</option>
+          </select>
+        </div>
       </div>
+
+      {(splitMode === "custom_miles" || splitMode === "custom_km") && (
+        <div className="form-group" style={{ marginBottom: "0.75rem" }}>
+          <label htmlFor="custom-splits">
+            {splitMode === "custom_miles"
+              ? "Custom distances (miles, comma-separated, e.g. 13.1, 20, 26.2)"
+              : "Custom distances (km, comma-separated, e.g. 21.1, 30, 42.2)"}
+          </label>
+          <input
+            id="custom-splits"
+            type="text"
+            placeholder={
+              splitMode === "custom_miles" ? "13.1, 20, 26.2" : "21.1, 30, 42.2"
+            }
+            value={customSplitText}
+            onChange={(e) => onCustomSplitTextChange(e.target.value)}
+            style={{ width: "100%" }}
+          />
+        </div>
+      )}
 
       {modelId === PERSONAL_CALIBRATION_ID && (
         <div className="form-group" style={{ marginBottom: "0.75rem" }}>
