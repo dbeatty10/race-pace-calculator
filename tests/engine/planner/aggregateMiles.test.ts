@@ -75,6 +75,6 @@ describe("aggregateMileSplits", () => {
     const splits = aggregateMileSplits(results);
     // Should have 6 entries: miles 1-5 plus partial mile 6
     expect(splits.length).toBe(6);
-    expect(splits[5]!.mile).toBe(6);
+    expect(splits[5]!.label).toBe("6");
   });
 });

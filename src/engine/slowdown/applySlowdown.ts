@@ -1,8 +1,8 @@
-import type { SegmentResult, MileSplit } from "@engine/types";
+import type { SegmentResult, SplitResult } from "@engine/types";
 import type {
   SlowdownScenarioConfig,
   AdjustedSegment,
-  AdjustedMileSplit,
+  AdjustedSplitResult,
 } from "./types";
 import { slowdownFraction } from "./slowdownFunction";
 import { METERS_PER_MILE } from "@engine/utils/units";
@@ -35,25 +35,27 @@ export function applySlowdown(
 export function aggregateAdjustedMileSplits(
   baselineSegments: SegmentResult[],
   adjustedSegments: AdjustedSegment[],
-  baselineSplits: MileSplit[]
-): AdjustedMileSplit[] {
+  baselineSplits: SplitResult[]
+): AdjustedSplitResult[] {
   if (baselineSegments.length === 0 || baselineSplits.length === 0) return [];
 
   const lastSeg = baselineSegments[baselineSegments.length - 1]!;
   const totalDistance = lastSeg.endDistance;
+  let prevDistM = 0;
+  let prevAdjElapsed = 0;
 
   return baselineSplits.map((baseline) => {
-    const mileEndDist = baseline.mile * METERS_PER_MILE;
+    const targetDist = Math.min(baseline.distanceM, totalDistance);
     let adjElapsed = 0;
 
     for (let i = 0; i < baselineSegments.length; i++) {
       const seg = baselineSegments[i]!;
       const adj = adjustedSegments[i]!;
 
-      if (seg.endDistance <= mileEndDist) {
+      if (seg.endDistance <= targetDist) {
         adjElapsed = adj.cumulativeAdjustedElapsedSec;
-      } else if (seg.startDistance < mileEndDist) {
-        const fraction = (mileEndDist - seg.startDistance) / seg.distance;
+      } else if (seg.startDistance < targetDist) {
+        const fraction = (targetDist - seg.startDistance) / seg.distance;
         adjElapsed =
           adj.cumulativeAdjustedElapsedSec -
           adj.adjustedTimeSec +
@@ -64,54 +66,22 @@ export function aggregateAdjustedMileSplits(
       }
     }
 
-    // If mile marker is past course end, use final adjusted time
-    if (mileEndDist >= totalDistance) {
-      const lastAdj = adjustedSegments[adjustedSegments.length - 1]!;
-      adjElapsed = lastAdj.cumulativeAdjustedElapsedSec;
-    }
-
-    // Compute adjusted pace for this mile
-    let prevAdjElapsed = 0;
-    if (baseline.mile > 1) {
-      const prevMileEndDist = (baseline.mile - 1) * METERS_PER_MILE;
-      for (let i = 0; i < baselineSegments.length; i++) {
-        const seg = baselineSegments[i]!;
-        const adj = adjustedSegments[i]!;
-        if (seg.endDistance <= prevMileEndDist) {
-          prevAdjElapsed = adj.cumulativeAdjustedElapsedSec;
-        } else if (seg.startDistance < prevMileEndDist) {
-          const fraction = (prevMileEndDist - seg.startDistance) / seg.distance;
-          prevAdjElapsed =
-            adj.cumulativeAdjustedElapsedSec -
-            adj.adjustedTimeSec +
-            fraction * adj.adjustedTimeSec;
-          break;
-        } else {
-          break;
-        }
-      }
-    }
-
-    const adjMileTime = adjElapsed - prevAdjElapsed;
-
-    let mileDist = METERS_PER_MILE;
-    const totalMiles = Math.ceil(totalDistance / METERS_PER_MILE);
-    if (
-      baseline.mile === totalMiles &&
-      totalDistance < baseline.mile * METERS_PER_MILE
-    ) {
-      mileDist = totalDistance - (baseline.mile - 1) * METERS_PER_MILE;
-    }
-
+    const splitDistM = targetDist - prevDistM;
+    const splitTime = adjElapsed - prevAdjElapsed;
     const adjPaceSecPerMile =
-      mileDist > 0 ? (adjMileTime / mileDist) * METERS_PER_MILE : 0;
+      splitDistM > 0 ? (splitTime / splitDistM) * METERS_PER_MILE : 0;
 
-    return {
-      mile: baseline.mile,
+    const result: AdjustedSplitResult = {
+      label: baseline.label,
+      distanceM: targetDist,
       baselinePaceSecPerMile: baseline.paceSecPerMile,
       adjustedPaceSecPerMile: adjPaceSecPerMile,
       baselineElapsedSec: baseline.elapsedSec,
       adjustedElapsedSec: adjElapsed,
     };
+
+    prevDistM = targetDist;
+    prevAdjElapsed = adjElapsed;
+    return result;
   });
 }

@@ -28,8 +28,9 @@ export interface AdjustedSegment {
   cumulativeAdjustedElapsedSec: number;
 }
 
-export interface AdjustedMileSplit {
-  mile: number;
+export interface AdjustedSplitResult {
+  label: string;
+  distanceM: number;
   baselinePaceSecPerMile: number;
   adjustedPaceSecPerMile: number;
   baselineElapsedSec: number;
@@ -42,7 +43,7 @@ export interface SlowdownResult {
   adjustedFinishTimeSec: number;
   slowdownCostSec: number;
   adjustedSegments: AdjustedSegment[];
-  adjustedMileSplits: AdjustedMileSplit[];
+  adjustedMileSplits: AdjustedSplitResult[];
   /** Only present in compensate_to_target mode */
   internalTargetTimeSec?: number;
 }

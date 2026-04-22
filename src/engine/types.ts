@@ -91,11 +91,19 @@ export interface SegmentResult {
   cumulativeElapsedSec: number;
 }
 
-export interface MileSplit {
-  mile: number;
+export interface SplitPoint {
+  label: string;
+  distanceM: number;
+}
+
+export interface SplitResult {
+  label: string;
+  distanceM: number;
   paceSecPerMile: number;
   elapsedSec: number;
 }
+
+export type SplitIntervalMode = "mile" | "5k" | "custom_miles" | "custom_km";
 
 export interface ClimbSegment {
   startDistance: number;
@@ -122,7 +130,7 @@ export interface PlanSummary {
 export interface RacePlan {
   summary: PlanSummary;
   segments: SegmentResult[];
-  mileSplits: MileSplit[];
+  mileSplits: SplitResult[];
   climbs: ClimbSegment[];
   slowdown?: SlowdownResult;
   warnings: string[];
@@ -153,4 +161,7 @@ export interface PlannerInput {
   slowdownOnsetMeters?: number;
   slowdownRampMeters?: number;
   slowdownPlateauFraction?: number;
+  splitMode?: SplitIntervalMode;
+  /** Pre-converted to meters. Only used when splitMode is "custom_miles" or "custom_km". */
+  customSplitDistancesM?: number[];
 }

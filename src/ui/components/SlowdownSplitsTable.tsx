@@ -1,8 +1,8 @@
-import type { AdjustedMileSplit } from "@engine/slowdown/types";
+import type { AdjustedSplitResult } from "@engine/slowdown/types";
 import { formatPace, formatElapsedTime } from "@engine/utils/paceFormatting";
 
 interface SlowdownSplitsTableProps {
-  splits: AdjustedMileSplit[];
+  splits: AdjustedSplitResult[];
 }
 
 export function SlowdownSplitsTable({ splits }: SlowdownSplitsTableProps) {
@@ -12,7 +12,7 @@ export function SlowdownSplitsTable({ splits }: SlowdownSplitsTableProps) {
       <table>
         <thead>
           <tr>
-            <th>Mile</th>
+            <th>Split</th>
             <th>Baseline Pace</th>
             <th>Adjusted Pace</th>
             <th>Baseline Elapsed</th>
@@ -21,8 +21,8 @@ export function SlowdownSplitsTable({ splits }: SlowdownSplitsTableProps) {
         </thead>
         <tbody>
           {splits.map((split) => (
-            <tr key={split.mile}>
-              <td>{split.mile}</td>
+            <tr key={split.distanceM}>
+              <td>{split.label}</td>
               <td>{formatPace(split.baselinePaceSecPerMile)} /mi</td>
               <td>{formatPace(split.adjustedPaceSecPerMile)} /mi</td>
               <td>{formatElapsedTime(split.baselineElapsedSec)}</td>

@@ -1,13 +1,13 @@
-import type { SegmentResult, MileSplit } from "@engine/types";
+import type { SegmentResult, SplitResult } from "@engine/types";
 import { METERS_PER_MILE } from "@engine/utils/units";
 
-export function aggregateMileSplits(segments: SegmentResult[]): MileSplit[] {
+export function aggregateMileSplits(segments: SegmentResult[]): SplitResult[] {
   if (segments.length === 0) return [];
 
   const last = segments[segments.length - 1]!;
   const totalDistance = last.endDistance;
   const totalMiles = Math.ceil(totalDistance / METERS_PER_MILE);
-  const splits: MileSplit[] = [];
+  const splits: SplitResult[] = [];
 
   let prevMileElapsed = 0;
 
@@ -50,7 +50,8 @@ export function aggregateMileSplits(segments: SegmentResult[]): MileSplit[] {
       mileDistance > 0 ? (mileTime / mileDistance) * METERS_PER_MILE : 0;
 
     splits.push({
-      mile,
+      label: String(mile),
+      distanceM: Math.min(mileEndDist, totalDistance),
       paceSecPerMile,
       elapsedSec: elapsed,
     });
