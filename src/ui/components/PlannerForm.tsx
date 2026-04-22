@@ -78,21 +78,6 @@ const SMOOTHING_TOOLTIP = (
   </>
 );
 
-const OFFICIAL_DISTANCE_TOOLTIP = (
-  <>
-    <p>
-      If the official certified course distance differs from the GPX-measured
-      distance, enter it here. Split labels and pace values will be shown on
-      the official scale (e.g., a "13.1 mi" split at the physical mile-13 marker).
-    </p>
-    <p>
-      Leave blank to use the GPX distance as-is. Typical use case: a GPX
-      records 26.36 mi for a marathon; you enter "26.22 miles" so splits line
-      up with on-course mile markers.
-    </p>
-  </>
-);
-
 const SPLIT_INTERVAL_TOOLTIP = (
   <>
     <p>
@@ -130,10 +115,6 @@ interface PlannerFormProps {
   onSplitModeChange: (value: SplitIntervalMode) => void;
   customSplitText: string;
   onCustomSplitTextChange: (value: string) => void;
-  officialDistanceValue: string;
-  onOfficialDistanceValueChange: (value: string) => void;
-  officialDistanceUnit: "miles" | "kilometers";
-  onOfficialDistanceUnitChange: (value: "miles" | "kilometers") => void;
   canRun: boolean;
   onRun: () => void;
 }
@@ -155,10 +136,6 @@ export function PlannerForm({
   onSplitModeChange,
   customSplitText,
   onCustomSplitTextChange,
-  officialDistanceValue,
-  onOfficialDistanceValueChange,
-  officialDistanceUnit,
-  onOfficialDistanceUnitChange,
   canRun,
   onRun,
 }: PlannerFormProps) {
@@ -269,36 +246,6 @@ export function PlannerForm({
           </select>
         </div>
 
-        <div className="form-group">
-          <label htmlFor="official-distance">
-            Official course distance
-            <InfoTooltip content={OFFICIAL_DISTANCE_TOOLTIP} />
-          </label>
-          <div style={{ display: "flex", gap: "0.5rem" }}>
-            <input
-              id="official-distance"
-              type="text"
-              inputMode="decimal"
-              placeholder="(optional)"
-              value={officialDistanceValue}
-              onChange={(e) => onOfficialDistanceValueChange(e.target.value)}
-              style={{ flex: 1 }}
-            />
-            <select
-              id="official-distance-unit"
-              aria-label="Official distance unit"
-              value={officialDistanceUnit}
-              onChange={(e) =>
-                onOfficialDistanceUnitChange(
-                  e.target.value as "miles" | "kilometers"
-                )
-              }
-            >
-              <option value="miles">miles</option>
-              <option value="kilometers">kilometers</option>
-            </select>
-          </div>
-        </div>
       </div>
 
       {(splitMode === "custom_miles" || splitMode === "custom_km") && (

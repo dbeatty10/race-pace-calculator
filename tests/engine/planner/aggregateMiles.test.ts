@@ -72,7 +72,7 @@ describe("aggregateSplits — mile boundaries", () => {
     const results = makeResults(55, segDist, pace);
     const splits = aggregateSplits(results, mileSplitPoints(55 * segDist));
     expect(splits).toHaveLength(6);
-    expect(splits[5]!.label).toBe("6");
+    expect(splits[5]!.label).toBe("5.5");
   });
 });
 

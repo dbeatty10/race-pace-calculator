@@ -20,7 +20,6 @@ export const MARATHON_5K_SPLITS: SplitPoint[] = [
   { label: "40K",     distanceM: 40000 },
   { label: "25.2 mi", distanceM: 25.2 * METERS_PER_MILE },
   { label: "26 mi",   distanceM: 26 * METERS_PER_MILE },
-  { label: "26.2 mi", distanceM: 26.2 * METERS_PER_MILE },
 ];
 
 export function isMarathonDistance(totalDistanceM: number): boolean {
@@ -31,9 +30,11 @@ export function mileSplitPoints(totalDistanceM: number): SplitPoint[] {
   const totalMiles = Math.ceil(totalDistanceM / METERS_PER_MILE);
   return Array.from({ length: totalMiles }, (_, i) => {
     const mile = i + 1;
+    const dist = Math.min(mile * METERS_PER_MILE, totalDistanceM);
+    const isPartial = dist < mile * METERS_PER_MILE;
     return {
-      label: String(mile),
-      distanceM: Math.min(mile * METERS_PER_MILE, totalDistanceM),
+      label: isPartial ? (dist / METERS_PER_MILE).toFixed(1) : String(mile),
+      distanceM: dist,
     };
   });
 }
@@ -44,7 +45,7 @@ export function every5kSplitPoints(totalDistanceM: number): SplitPoint[] {
     const targetDist = Math.min((i + 1) * 5000, totalDistanceM);
     const isPartial = targetDist < (i + 1) * 5000;
     return {
-      label: isPartial ? "Finish" : `${(i + 1) * 5}K`,
+      label: isPartial ? `${(targetDist / 1000).toFixed(1)} km` : `${(i + 1) * 5}K`,
       distanceM: targetDist,
     };
   });
@@ -58,9 +59,11 @@ export function resolveSplitPoints(
   if (mode === "mile") return mileSplitPoints(totalDistanceM);
 
   if (mode === "5k") {
-    return isMarathonDistance(totalDistanceM)
-      ? MARATHON_5K_SPLITS
-      : every5kSplitPoints(totalDistanceM);
+    if (isMarathonDistance(totalDistanceM)) {
+      const finalLabel = `${(totalDistanceM / METERS_PER_MILE).toFixed(1)} mi`;
+      return [...MARATHON_5K_SPLITS, { label: finalLabel, distanceM: totalDistanceM }];
+    }
+    return every5kSplitPoints(totalDistanceM);
   }
 
   if (customDistancesM && customDistancesM.length > 0) {

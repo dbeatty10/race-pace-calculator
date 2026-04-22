@@ -10,6 +10,7 @@ import {
 import type { SlowdownPreset, SlowdownMode } from "@engine/slowdown/types";
 import { METERS_PER_MILE } from "@engine/utils/units";
 import { CourseUpload } from "@ui/components/CourseUpload";
+import { InfoTooltip } from "@ui/components/InfoTooltip";
 import { PlannerForm } from "@ui/components/PlannerForm";
 import { SummaryPanel } from "@ui/components/SummaryPanel";
 import { MileSplitsTable } from "@ui/components/MileSplitsTable";
@@ -171,6 +172,50 @@ export default function App() {
       <CourseUpload onFileLoaded={handleFileLoaded} />
       {fileName && <p>Loaded: {fileName}</p>}
 
+      <div className="form-group" style={{ marginBottom: "0.75rem" }}>
+        <label htmlFor="official-distance">
+          Official course distance
+          <InfoTooltip content={
+            <>
+              <p>
+                If the official certified course distance differs from the
+                GPX-measured distance, enter it here. Split labels and pace
+                values will be shown on the official scale (e.g., a
+                &quot;13.1 mi&quot; split at the physical mile-13 marker).
+              </p>
+              <p>
+                Leave blank to use the GPX distance as-is. Typical use case:
+                a GPX records 26.36 mi for a marathon; you enter
+                &quot;26.22 miles&quot; so splits line up with on-course mile
+                markers.
+              </p>
+            </>
+          } />
+        </label>
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          <input
+            id="official-distance"
+            type="text"
+            inputMode="decimal"
+            placeholder="(optional)"
+            value={officialDistanceValue}
+            onChange={(e) => setOfficialDistanceValue(e.target.value)}
+            style={{ flex: 1 }}
+          />
+          <select
+            id="official-distance-unit"
+            aria-label="Official distance unit"
+            value={officialDistanceUnit}
+            onChange={(e) =>
+              setOfficialDistanceUnit(e.target.value as "miles" | "kilometers")
+            }
+          >
+            <option value="miles">miles</option>
+            <option value="kilometers">kilometers</option>
+          </select>
+        </div>
+      </div>
+
       <PlannerForm
         planningMode={planningMode}
         onPlanningModeChange={setPlanningMode}
@@ -188,10 +233,6 @@ export default function App() {
         onSplitModeChange={setSplitMode}
         customSplitText={customSplitText}
         onCustomSplitTextChange={setCustomSplitText}
-        officialDistanceValue={officialDistanceValue}
-        onOfficialDistanceValueChange={setOfficialDistanceValue}
-        officialDistanceUnit={officialDistanceUnit}
-        onOfficialDistanceUnitChange={setOfficialDistanceUnit}
         canRun={canRun}
         onRun={handleRun}
       />
