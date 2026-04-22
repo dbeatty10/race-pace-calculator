@@ -91,11 +91,19 @@ export interface SegmentResult {
   cumulativeElapsedSec: number;
 }
 
-export interface MileSplit {
-  mile: number;
+export interface SplitPoint {
+  label: string;
+  distanceM: number;
+}
+
+export interface SplitResult {
+  label: string;
+  distanceM: number;
   paceSecPerMile: number;
   elapsedSec: number;
 }
+
+export type SplitIntervalMode = "mile" | "5k" | "custom_miles" | "custom_km";
 
 export interface ClimbSegment {
   startDistance: number;
@@ -113,6 +121,8 @@ export interface PlanSummary {
   targetFinishTimeSec: number;
   computedFinishTimeSec: number;
   courseLengthMeters: number;
+  /** GPX-measured distance in meters. Equals courseLengthMeters when no official distance was provided. */
+  gpxDistanceMeters: number;
   totalClimbMeters: number;
   totalDescentMeters: number;
   flatEquivalentPaceSecPerMile: number;
@@ -122,7 +132,7 @@ export interface PlanSummary {
 export interface RacePlan {
   summary: PlanSummary;
   segments: SegmentResult[];
-  mileSplits: MileSplit[];
+  mileSplits: SplitResult[];
   climbs: ClimbSegment[];
   slowdown?: SlowdownResult;
   warnings: string[];
@@ -153,4 +163,14 @@ export interface PlannerInput {
   slowdownOnsetMeters?: number;
   slowdownRampMeters?: number;
   slowdownPlateauFraction?: number;
+  splitMode?: SplitIntervalMode;
+  /** Pre-converted to meters. Only used when splitMode is "custom_miles" or "custom_km". */
+  customSplitDistancesM?: number[];
+  /**
+   * Official (certified) course distance in meters. When provided and different
+   * from the GPX distance, splits are labeled in official units and pace is
+   * shown per official mile. Leave undefined to use the GPX distance as-is.
+   * Must be > 0 if provided.
+   */
+  officialDistanceM?: number;
 }

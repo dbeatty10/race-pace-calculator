@@ -99,3 +99,109 @@ describe("generateRacePlan", () => {
     expect(plan.mileSplits.length).toBeGreaterThan(0);
   });
 });
+
+describe("generateRacePlan — officialDistanceM scaling", () => {
+  it("uses officialDistanceM as courseLengthMeters when provided", () => {
+    const plan = generateRacePlan({
+      gpxData: SIMPLE_HILL_GPX,
+      modelId: "strava_inferred",
+      targetFinishTimeSec: 3600,
+      officialDistanceM: 10000,
+    });
+    expect(plan.summary.courseLengthMeters).toBe(10000);
+    expect(plan.summary.gpxDistanceMeters).not.toBe(10000);
+  });
+
+  it("defaults courseLengthMeters to GPX distance when officialDistanceM omitted", () => {
+    const plan = generateRacePlan({
+      gpxData: SIMPLE_HILL_GPX,
+      modelId: "strava_inferred",
+      targetFinishTimeSec: 3600,
+    });
+    expect(plan.summary.courseLengthMeters).toBe(plan.summary.gpxDistanceMeters);
+  });
+
+  it("scales mile-split paceSecPerMile inversely to the distance ratio", () => {
+    const gpx = generateRacePlan({
+      gpxData: SIMPLE_HILL_GPX,
+      modelId: "strava_inferred",
+      targetFinishTimeSec: 3600,
+    });
+    const official = generateRacePlan({
+      gpxData: SIMPLE_HILL_GPX,
+      modelId: "strava_inferred",
+      targetFinishTimeSec: 3600,
+      officialDistanceM: gpx.summary.gpxDistanceMeters * 0.99,
+    });
+    // pace_official = pace_gpx / 0.99, so official pace is ~1% slower.
+    // We use a loose tolerance (-1 decimal ≈ ±5 sec/mi) because the two plans
+    // have slightly different GPX split boundaries, introducing a small
+    // boundary-shift effect on top of the pure scaling.
+    const gpxPace = gpx.mileSplits[0]!.paceSecPerMile;
+    const officialPace = official.mileSplits[0]!.paceSecPerMile;
+    expect(officialPace).toBeGreaterThan(gpxPace); // official pace is slower
+    expect(officialPace / gpxPace).toBeCloseTo(1 / 0.99, 2); // within ~1% of expected ratio
+  });
+
+  it("places split distanceM on the official scale", () => {
+    const plan = generateRacePlan({
+      gpxData: SIMPLE_HILL_GPX,
+      modelId: "strava_inferred",
+      targetFinishTimeSec: 3600,
+      officialDistanceM: 10000,
+      splitMode: "5k",
+    });
+    // The 5K split on a 10K course should be at 5000m official
+    expect(plan.mileSplits[0]!.distanceM).toBeCloseTo(5000, 0);
+    expect(plan.mileSplits[0]!.label).toBe("5K");
+  });
+
+  it("target-effort mode treats flatEquivalentPaceSecPerMile as per-official-mile", () => {
+    const gpxOnly = generateRacePlan({
+      gpxData: SIMPLE_HILL_GPX,
+      modelId: "strava_inferred",
+      planningMode: "target_effort",
+      flatEquivalentPaceSecPerMile: 600,
+    });
+    const scaled = generateRacePlan({
+      gpxData: SIMPLE_HILL_GPX,
+      modelId: "strava_inferred",
+      planningMode: "target_effort",
+      flatEquivalentPaceSecPerMile: 600,
+      officialDistanceM: gpxOnly.summary.gpxDistanceMeters * 0.99,
+    });
+    // When 600 sec/mi is interpreted per-official-mile and official < GPX,
+    // the runner must move ~1% faster in GPX terms, so finish time is ~1%
+    // less than the no-scaling case.
+    const gpxFinish = gpxOnly.summary.computedFinishTimeSec;
+    const scaledFinish = scaled.summary.computedFinishTimeSec;
+    expect(scaledFinish).toBeLessThan(gpxFinish);
+    expect(scaledFinish).toBeCloseTo(gpxFinish * 0.99, 0);
+  });
+
+  it("warns when officialDistanceM differs from GPX by more than 5%", () => {
+    const plan = generateRacePlan({
+      gpxData: SIMPLE_HILL_GPX,
+      modelId: "strava_inferred",
+      targetFinishTimeSec: 3600,
+      officialDistanceM: 500,  // absurdly small
+    });
+    expect(plan.warnings.some((w) => w.includes("Official distance"))).toBe(true);
+  });
+
+  it("does not warn when distances are within 5%", () => {
+    const plan = generateRacePlan({
+      gpxData: SIMPLE_HILL_GPX,
+      modelId: "strava_inferred",
+      targetFinishTimeSec: 3600,
+    });
+    const gpx = plan.summary.gpxDistanceMeters;
+    const planClose = generateRacePlan({
+      gpxData: SIMPLE_HILL_GPX,
+      modelId: "strava_inferred",
+      targetFinishTimeSec: 3600,
+      officialDistanceM: gpx * 0.98,
+    });
+    expect(planClose.warnings.every((w) => !w.includes("Official distance"))).toBe(true);
+  });
+});

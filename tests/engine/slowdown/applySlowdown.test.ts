@@ -3,7 +3,7 @@ import {
   applySlowdown,
   aggregateAdjustedMileSplits,
 } from "@engine/slowdown/applySlowdown";
-import type { SegmentResult, MileSplit } from "@engine/types";
+import type { SegmentResult, SplitResult } from "@engine/types";
 import type { SlowdownScenarioConfig } from "@engine/slowdown/types";
 import { METERS_PER_MILE } from "@engine/utils/units";
 
@@ -96,12 +96,12 @@ describe("aggregateAdjustedMileSplits", () => {
     const numSegs = 50;
     const segs = makeSegmentResults(numSegs, distPerSeg);
     const adjusted = applySlowdown(segs, noSlowdown());
-    const baselineSplits: MileSplit[] = [
-      { mile: 1, paceSecPerMile: 720, elapsedSec: 720 },
-      { mile: 2, paceSecPerMile: 720, elapsedSec: 1440 },
-      { mile: 3, paceSecPerMile: 720, elapsedSec: 2160 },
-      { mile: 4, paceSecPerMile: 720, elapsedSec: 2880 },
-      { mile: 5, paceSecPerMile: 720, elapsedSec: 3600 },
+    const baselineSplits: SplitResult[] = [
+      { label: "1", distanceM: METERS_PER_MILE,     paceSecPerMile: 720, elapsedSec: 720  },
+      { label: "2", distanceM: 2 * METERS_PER_MILE, paceSecPerMile: 720, elapsedSec: 1440 },
+      { label: "3", distanceM: 3 * METERS_PER_MILE, paceSecPerMile: 720, elapsedSec: 2160 },
+      { label: "4", distanceM: 4 * METERS_PER_MILE, paceSecPerMile: 720, elapsedSec: 2880 },
+      { label: "5", distanceM: 5 * METERS_PER_MILE, paceSecPerMile: 720, elapsedSec: 3600 },
     ];
     const adjSplits = aggregateAdjustedMileSplits(segs, adjusted, baselineSplits);
     expect(adjSplits).toHaveLength(baselineSplits.length);
@@ -112,10 +112,10 @@ describe("aggregateAdjustedMileSplits", () => {
     const numSegs = 50;
     const segs = makeSegmentResults(numSegs, distPerSeg);
     const adjusted = applySlowdown(segs, noSlowdown());
-    const baselineSplits: MileSplit[] = [
-      { mile: 1, paceSecPerMile: 720, elapsedSec: 720 },
-      { mile: 2, paceSecPerMile: 720, elapsedSec: 1440 },
-      { mile: 3, paceSecPerMile: 720, elapsedSec: 2160 },
+    const baselineSplits: SplitResult[] = [
+      { label: "1", distanceM: METERS_PER_MILE,     paceSecPerMile: 720, elapsedSec: 720  },
+      { label: "2", distanceM: 2 * METERS_PER_MILE, paceSecPerMile: 720, elapsedSec: 1440 },
+      { label: "3", distanceM: 3 * METERS_PER_MILE, paceSecPerMile: 720, elapsedSec: 2160 },
     ];
     const adjSplits = aggregateAdjustedMileSplits(segs, adjusted, baselineSplits);
     for (const split of adjSplits) {

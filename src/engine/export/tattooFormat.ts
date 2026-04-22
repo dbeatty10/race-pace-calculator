@@ -1,17 +1,15 @@
-import type { MileSplit } from "@engine/types";
+import type { SplitResult } from "@engine/types";
 import { formatPace, formatElapsedTime } from "@engine/utils/paceFormatting";
 
-export function racePlanToTattoo(splits: MileSplit[]): string {
-  // Determine max mile number width for alignment
-  const maxMile = splits.length > 0 ? splits[splits.length - 1]!.mile : 0;
-  const mileWidth = String(maxMile).length;
+export function racePlanToTattoo(splits: SplitResult[]): string {
+  const maxLabelLen = splits.reduce((m, s) => Math.max(m, s.label.length), 0);
 
   return splits
     .map((s) => {
-      const mileStr = String(s.mile).padStart(mileWidth);
+      const labelStr = s.label.padStart(maxLabelLen);
       const pace = formatPace(s.paceSecPerMile);
       const elapsed = formatElapsedTime(s.elapsedSec);
-      return `${mileStr}  ${pace}  ${elapsed}`;
+      return `${labelStr}  ${pace}  ${elapsed}`;
     })
     .join("\n");
 }
