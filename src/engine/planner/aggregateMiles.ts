@@ -1,31 +1,30 @@
-import type { SegmentResult, SplitResult } from "@engine/types";
+import type { SegmentResult, SplitPoint, SplitResult } from "@engine/types";
 import { METERS_PER_MILE } from "@engine/utils/units";
 
-export function aggregateMileSplits(segments: SegmentResult[]): SplitResult[] {
-  if (segments.length === 0) return [];
+export function aggregateSplits(
+  segments: SegmentResult[],
+  splitPoints: SplitPoint[]
+): SplitResult[] {
+  if (segments.length === 0 || splitPoints.length === 0) return [];
 
   const last = segments[segments.length - 1]!;
   const totalDistance = last.endDistance;
-  const totalMiles = Math.ceil(totalDistance / METERS_PER_MILE);
-  const splits: SplitResult[] = [];
+  const results: SplitResult[] = [];
+  let prevDistM = 0;
+  let prevElapsed = 0;
 
-  let prevMileElapsed = 0;
-
-  for (let mile = 1; mile <= totalMiles; mile++) {
-    const mileEndDist = mile * METERS_PER_MILE;
+  for (const sp of splitPoints) {
+    const targetDist = Math.min(sp.distanceM, totalDistance);
     let elapsed = 0;
 
-    // Sum time for all segments up to this mile marker
     for (const seg of segments) {
-      if (seg.endDistance <= mileEndDist) {
-        // Entire segment is within this mile boundary
+      if (seg.endDistance <= targetDist) {
         elapsed = seg.cumulativeElapsedSec;
-      } else if (seg.startDistance < mileEndDist) {
-        // Partial segment — interpolate
-        const fraction =
-          (mileEndDist - seg.startDistance) / seg.distance;
+      } else if (seg.startDistance < targetDist) {
+        const fraction = (targetDist - seg.startDistance) / seg.distance;
         elapsed =
-          (seg.cumulativeElapsedSec - seg.targetTimeSec) +
+          seg.cumulativeElapsedSec -
+          seg.targetTimeSec +
           fraction * seg.targetTimeSec;
         break;
       } else {
@@ -33,31 +32,21 @@ export function aggregateMileSplits(segments: SegmentResult[]): SplitResult[] {
       }
     }
 
-    // If mile marker is past course end, use total time
-    if (mileEndDist >= totalDistance) {
-      elapsed = last.cumulativeElapsedSec;
-    }
-
-    const mileTime = elapsed - prevMileElapsed;
-
-    // For the last partial mile, compute pace relative to actual distance
-    let mileDistance = METERS_PER_MILE;
-    if (mile === totalMiles && totalDistance < mileEndDist) {
-      mileDistance = totalDistance - (mile - 1) * METERS_PER_MILE;
-    }
-
+    const splitDistM = targetDist - prevDistM;
+    const splitTime = elapsed - prevElapsed;
     const paceSecPerMile =
-      mileDistance > 0 ? (mileTime / mileDistance) * METERS_PER_MILE : 0;
+      splitDistM > 0 ? (splitTime / splitDistM) * METERS_PER_MILE : 0;
 
-    splits.push({
-      label: String(mile),
-      distanceM: Math.min(mileEndDist, totalDistance),
+    results.push({
+      label: sp.label,
+      distanceM: targetDist,
       paceSecPerMile,
       elapsedSec: elapsed,
     });
 
-    prevMileElapsed = elapsed;
+    prevDistM = targetDist;
+    prevElapsed = elapsed;
   }
 
-  return splits;
+  return results;
 }

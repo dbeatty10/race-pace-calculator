@@ -8,7 +8,8 @@ import { smoothElevation } from "@engine/course/smoothElevation";
 import { getModel } from "@engine/models/registry";
 import { solveWholeCourse } from "./solver";
 import { propagateEffort } from "./targetEffort";
-import { aggregateMileSplits } from "./aggregateMiles";
+import { aggregateSplits } from "./aggregateMiles";
+import { resolveSplitPoints } from "./splitSchedules";
 import { computeSummary } from "./summary";
 import { detectClimbs } from "./climbDetection";
 import { paceSecPerMileToSpeedMps } from "@engine/utils/units";
@@ -44,6 +45,12 @@ export function generateRacePlan(input: PlannerInput): RacePlan {
   // 4. Resample to microsegments
   const segmentDist = input.segmentDistanceMeters ?? DEFAULT_SEGMENT_DISTANCE;
   const microsegments = resampleToMicrosegments(smoothed, segmentDist);
+  const totalDistanceM = microsegments[microsegments.length - 1]!.endDistance;
+  const splitPoints = resolveSplitPoints(
+    input.splitMode ?? "mile",
+    totalDistanceM,
+    input.customSplitDistancesM
+  );
 
   // 5. Get model
   const model = input.customModel ?? getModel(input.modelId);
@@ -80,7 +87,7 @@ export function generateRacePlan(input: PlannerInput): RacePlan {
   }
 
   // 7. Aggregate mile splits
-  let mileSplits = aggregateMileSplits(segmentResults);
+  let mileSplits = aggregateSplits(segmentResults, splitPoints);
 
   // 8. Detect climbs
   const climbs = detectClimbs(microsegments);
@@ -122,7 +129,7 @@ export function generateRacePlan(input: PlannerInput): RacePlan {
       if (compResult.warning) warnings.push(compResult.warning);
 
       segmentResults = compResult.baselineSegments;
-      mileSplits = aggregateMileSplits(segmentResults);
+      mileSplits = aggregateSplits(segmentResults, splitPoints);
 
       const adjMileSplits = aggregateAdjustedMileSplits(segmentResults, compResult.adjustedSegments, mileSplits);
 
