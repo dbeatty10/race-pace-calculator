@@ -286,6 +286,7 @@ export function PlannerForm({
             />
             <select
               id="official-distance-unit"
+              aria-label="Official distance unit"
               value={officialDistanceUnit}
               onChange={(e) =>
                 onOfficialDistanceUnitChange(

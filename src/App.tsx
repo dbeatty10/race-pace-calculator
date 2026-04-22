@@ -79,6 +79,8 @@ export default function App() {
     setFileName(name);
     setPlan(null);
     setError(null);
+    setOfficialDistanceValue("");
+    setOfficialDistanceUnit("miles");
   }, []);
 
   const handleRun = useCallback(() => {
