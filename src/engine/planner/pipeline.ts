@@ -1,4 +1,5 @@
-import type { PlannerInput, RacePlan } from "@engine/types";
+import type { PlannerInput, RacePlan, SplitResult, SplitPoint } from "@engine/types";
+import type { AdjustedSplitResult } from "@engine/slowdown/types";
 import { parseGpx } from "@engine/course/parseGpx";
 import {
   rawPointsToCoursePoints,
@@ -18,6 +19,34 @@ import { applySlowdown, aggregateAdjustedMileSplits } from "@engine/slowdown/app
 import { compensateToTarget } from "@engine/slowdown/compensate";
 
 const DEFAULT_SEGMENT_DISTANCE = 160.934; // ~0.1 miles in meters
+
+function scaleSplitsToOfficial(
+  gpxSplits: SplitResult[],
+  officialSplitPoints: SplitPoint[],
+  officialOverGpx: number
+): SplitResult[] {
+  return gpxSplits.map((s, i) => ({
+    label: s.label,
+    distanceM: officialSplitPoints[i]!.distanceM,
+    paceSecPerMile: s.paceSecPerMile / officialOverGpx,
+    elapsedSec: s.elapsedSec,
+  }));
+}
+
+function scaleAdjustedSplitsToOfficial(
+  gpxAdjSplits: AdjustedSplitResult[],
+  officialSplitPoints: SplitPoint[],
+  officialOverGpx: number
+): AdjustedSplitResult[] {
+  return gpxAdjSplits.map((s, i) => ({
+    label: s.label,
+    distanceM: officialSplitPoints[i]!.distanceM,
+    baselinePaceSecPerMile: s.baselinePaceSecPerMile / officialOverGpx,
+    adjustedPaceSecPerMile: s.adjustedPaceSecPerMile / officialOverGpx,
+    baselineElapsedSec: s.baselineElapsedSec,
+    adjustedElapsedSec: s.adjustedElapsedSec,
+  }));
+}
 
 export function generateRacePlan(input: PlannerInput): RacePlan {
   const warnings: string[] = [];
@@ -45,12 +74,35 @@ export function generateRacePlan(input: PlannerInput): RacePlan {
   // 4. Resample to microsegments
   const segmentDist = input.segmentDistanceMeters ?? DEFAULT_SEGMENT_DISTANCE;
   const microsegments = resampleToMicrosegments(smoothed, segmentDist);
-  const totalDistanceM = microsegments[microsegments.length - 1]!.endDistance;
-  const splitPoints = resolveSplitPoints(
+  const gpxDistanceM = microsegments[microsegments.length - 1]!.endDistance;
+  const officialDistanceM =
+    input.officialDistanceM && input.officialDistanceM > 0
+      ? input.officialDistanceM
+      : gpxDistanceM;
+  const officialOverGpx = officialDistanceM / gpxDistanceM;
+
+  // Warn if the user's official distance diverges from GPX by more than 5%
+  if (Math.abs(1 - officialOverGpx) > 0.05) {
+    const gpxMi = gpxDistanceM / 1609.344;
+    const officialMi = officialDistanceM / 1609.344;
+    warnings.push(
+      `Official distance (${officialMi.toFixed(2)} mi) differs from GPX-measured distance (${gpxMi.toFixed(2)} mi) by more than 5%. Verify the distance.`
+    );
+  }
+
+  // Resolve split points in OFFICIAL distance so marathon detection and mile
+  // boundaries use the user-facing distance.
+  const officialSplitPoints = resolveSplitPoints(
     input.splitMode ?? "mile",
-    totalDistanceM,
+    officialDistanceM,
     input.customSplitDistancesM
   );
+
+  // Convert to GPX coordinates for lookup inside aggregateSplits.
+  const gpxSplitPoints = officialSplitPoints.map((sp) => ({
+    label: sp.label,
+    distanceM: sp.distanceM / officialOverGpx,
+  }));
 
   // 5. Get model
   const model = input.customModel ?? getModel(input.modelId);
@@ -74,9 +126,11 @@ export function generateRacePlan(input: PlannerInput): RacePlan {
   let targetTimeSec: number;
 
   if (mode === "target_effort") {
-    const flatSpeedMps = paceSecPerMileToSpeedMps(
-      input.flatEquivalentPaceSecPerMile!
-    );
+    // User's flat-equivalent pace is per-official-mile. Convert to per-GPX-mile
+    // for the solver: pace_gpx = pace_official × (official/gpx).
+    const gpxPaceForSolver =
+      input.flatEquivalentPaceSecPerMile! * officialOverGpx;
+    const flatSpeedMps = paceSecPerMileToSpeedMps(gpxPaceForSolver);
     segmentResults = propagateEffort(microsegments, model, flatSpeedMps);
     // In target effort mode, the "target" is the computed projection
     targetTimeSec =
@@ -86,8 +140,13 @@ export function generateRacePlan(input: PlannerInput): RacePlan {
     segmentResults = solveWholeCourse(microsegments, model, targetTimeSec);
   }
 
-  // 7. Aggregate mile splits
-  let mileSplits = aggregateSplits(segmentResults, splitPoints);
+  // 7. Aggregate mile splits (aggregation uses GPX coordinates internally)
+  let mileSplitsGpx = aggregateSplits(segmentResults, gpxSplitPoints);
+  let mileSplits = scaleSplitsToOfficial(
+    mileSplitsGpx,
+    officialSplitPoints,
+    officialOverGpx
+  );
 
   // 8. Detect climbs
   const climbs = detectClimbs(microsegments);
@@ -107,17 +166,16 @@ export function generateRacePlan(input: PlannerInput): RacePlan {
       }
     );
 
-    const courseLengthMeters = microsegments[microsegments.length - 1]!.endDistance;
-    if (sdConfig.onsetDistanceMeters > courseLengthMeters) {
+    if (sdConfig.onsetDistanceMeters > gpxDistanceM) {
       warnings.push(
-        `Slowdown onset (${(sdConfig.onsetDistanceMeters / 1000).toFixed(1)} km) is beyond course length (${(courseLengthMeters / 1000).toFixed(1)} km). Slowdown will not activate.`
+        `Slowdown onset (${(sdConfig.onsetDistanceMeters / 1000).toFixed(1)} km) is beyond course length (${(gpxDistanceM / 1000).toFixed(1)} km). Slowdown will not activate.`
       );
     }
 
     const wallPresets = ["wall_lite", "classic_wall", "early_blowup"];
-    if (wallPresets.includes(sdConfig.preset) && courseLengthMeters < 20000) {
+    if (wallPresets.includes(sdConfig.preset) && gpxDistanceM < 20000) {
       warnings.push(
-        `The "${sdConfig.preset}" slowdown preset is designed for marathon-distance courses and may not be meaningful for a ${(courseLengthMeters / 1000).toFixed(1)} km course.`
+        `The "${sdConfig.preset}" slowdown preset is designed for marathon-distance courses and may not be meaningful for a ${(gpxDistanceM / 1000).toFixed(1)} km course.`
       );
     }
 
@@ -129,9 +187,23 @@ export function generateRacePlan(input: PlannerInput): RacePlan {
       if (compResult.warning) warnings.push(compResult.warning);
 
       segmentResults = compResult.baselineSegments;
-      mileSplits = aggregateSplits(segmentResults, splitPoints);
+      mileSplitsGpx = aggregateSplits(segmentResults, gpxSplitPoints);
+      mileSplits = scaleSplitsToOfficial(
+        mileSplitsGpx,
+        officialSplitPoints,
+        officialOverGpx
+      );
 
-      const adjMileSplits = aggregateAdjustedMileSplits(segmentResults, compResult.adjustedSegments, mileSplits);
+      const adjMileSplitsGpx = aggregateAdjustedMileSplits(
+        segmentResults,
+        compResult.adjustedSegments,
+        mileSplitsGpx
+      );
+      const adjMileSplits = scaleAdjustedSplitsToOfficial(
+        adjMileSplitsGpx,
+        officialSplitPoints,
+        officialOverGpx
+      );
 
       slowdownResult = {
         config: sdConfig,
@@ -144,7 +216,16 @@ export function generateRacePlan(input: PlannerInput): RacePlan {
       };
     } else {
       const adjustedSegments = applySlowdown(segmentResults, sdConfig);
-      const adjMileSplits = aggregateAdjustedMileSplits(segmentResults, adjustedSegments, mileSplits);
+      const adjMileSplitsGpx = aggregateAdjustedMileSplits(
+        segmentResults,
+        adjustedSegments,
+        mileSplitsGpx
+      );
+      const adjMileSplits = scaleAdjustedSplitsToOfficial(
+        adjMileSplitsGpx,
+        officialSplitPoints,
+        officialOverGpx
+      );
       const lastAdj = adjustedSegments[adjustedSegments.length - 1]!;
       const baselineFinish = segmentResults[segmentResults.length - 1]!.cumulativeElapsedSec;
 
@@ -166,8 +247,8 @@ export function generateRacePlan(input: PlannerInput): RacePlan {
     model,
     targetTimeSec,
     mode,
-    totalDistanceM,   // gpxDistanceMeters
-    totalDistanceM    // officialDistanceMeters — same for now, Task 3 will use the real value
+    gpxDistanceM,
+    officialDistanceM
   );
 
   return { summary, segments: segmentResults, mileSplits, climbs, slowdown: slowdownResult, warnings };
