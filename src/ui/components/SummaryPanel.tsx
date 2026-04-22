@@ -32,6 +32,13 @@ export function SummaryPanel({ summary }: SummaryPanelProps) {
         <dt>Course length</dt>
         <dd>{metersToMiles(summary.courseLengthMeters).toFixed(2)} mi</dd>
 
+        {Math.abs(summary.courseLengthMeters - summary.gpxDistanceMeters) > 1 && (
+          <>
+            <dt>GPX measured</dt>
+            <dd>{metersToMiles(summary.gpxDistanceMeters).toFixed(2)} mi</dd>
+          </>
+        )}
+
         <dt>Total climb</dt>
         <dd>{metersToFeet(summary.totalClimbMeters).toFixed(0)} ft</dd>
 

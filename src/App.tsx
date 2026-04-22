@@ -40,6 +40,17 @@ function parseCustomSplits(text: string, unitFactor: number): number[] {
     .map((d) => d * unitFactor);
 }
 
+function parseOfficialDistance(
+  value: string,
+  unit: "miles" | "kilometers"
+): number | undefined {
+  const trimmed = value.trim();
+  if (trimmed === "") return undefined;
+  const parsed = parseFloat(trimmed);
+  if (!Number.isFinite(parsed) || parsed <= 0) return undefined;
+  return unit === "miles" ? parsed * METERS_PER_MILE : parsed * 1000;
+}
+
 export default function App() {
   const [gpxData, setGpxData] = useState<string | null>(null);
   const [fileName, setFileName] = useState("");
@@ -51,6 +62,10 @@ export default function App() {
   const [smoothing, setSmoothing] = useState<SmoothingLevel>("light");
   const [splitMode, setSplitMode] = useState<SplitIntervalMode>("mile");
   const [customSplitText, setCustomSplitText] = useState("");
+  const [officialDistanceValue, setOfficialDistanceValue] = useState("");
+  const [officialDistanceUnit, setOfficialDistanceUnit] = useState<
+    "miles" | "kilometers"
+  >("miles");
   const [plan, setPlan] = useState<RacePlan | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [slowdownPreset, setSlowdownPreset] = useState<SlowdownPreset>("none");
@@ -83,6 +98,11 @@ export default function App() {
           ? parseCustomSplits(customSplitText, 1000)
           : undefined;
 
+      const officialDistanceM = parseOfficialDistance(
+        officialDistanceValue,
+        officialDistanceUnit
+      );
+
       const result = generateRacePlan({
         gpxData,
         modelId,
@@ -91,6 +111,7 @@ export default function App() {
         planningMode,
         splitMode,
         customSplitDistancesM,
+        officialDistanceM,
         targetFinishTimeSec:
           planningMode === "target_time"
             ? parseTargetTime(targetTime)
@@ -130,6 +151,8 @@ export default function App() {
     smoothing,
     splitMode,
     customSplitText,
+    officialDistanceValue,
+    officialDistanceUnit,
     slowdownPreset,
     slowdownMode,
     customOnsetKm,
@@ -163,6 +186,10 @@ export default function App() {
         onSplitModeChange={setSplitMode}
         customSplitText={customSplitText}
         onCustomSplitTextChange={setCustomSplitText}
+        officialDistanceValue={officialDistanceValue}
+        onOfficialDistanceValueChange={setOfficialDistanceValue}
+        officialDistanceUnit={officialDistanceUnit}
+        onOfficialDistanceUnitChange={setOfficialDistanceUnit}
         canRun={canRun}
         onRun={handleRun}
       />
