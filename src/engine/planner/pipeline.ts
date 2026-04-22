@@ -13,7 +13,7 @@ import { aggregateSplits } from "./aggregateMiles";
 import { resolveSplitPoints } from "./splitSchedules";
 import { computeSummary } from "./summary";
 import { detectClimbs } from "./climbDetection";
-import { paceSecPerMileToSpeedMps } from "@engine/utils/units";
+import { paceSecPerMileToSpeedMps, METERS_PER_MILE } from "@engine/utils/units";
 import { resolveSlowdownConfig, type SlowdownResult } from "@engine/slowdown/types";
 import { applySlowdown, aggregateAdjustedMileSplits } from "@engine/slowdown/applySlowdown";
 import { compensateToTarget } from "@engine/slowdown/compensate";
@@ -83,8 +83,8 @@ export function generateRacePlan(input: PlannerInput): RacePlan {
 
   // Warn if the user's official distance diverges from GPX by more than 5%
   if (Math.abs(1 - officialOverGpx) > 0.05) {
-    const gpxMi = gpxDistanceM / 1609.344;
-    const officialMi = officialDistanceM / 1609.344;
+    const gpxMi = gpxDistanceM / METERS_PER_MILE;
+    const officialMi = officialDistanceM / METERS_PER_MILE;
     warnings.push(
       `Official distance (${officialMi.toFixed(2)} mi) differs from GPX-measured distance (${gpxMi.toFixed(2)} mi) by more than 5%. Verify the distance.`
     );
