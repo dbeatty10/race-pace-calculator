@@ -165,7 +165,9 @@ export function generateRacePlan(input: PlannerInput): RacePlan {
     segmentResults,
     model,
     targetTimeSec,
-    mode
+    mode,
+    totalDistanceM,   // gpxDistanceMeters
+    totalDistanceM    // officialDistanceMeters — same for now, Task 3 will use the real value
   );
 
   return { summary, segments: segmentResults, mileSplits, climbs, slowdown: slowdownResult, warnings };

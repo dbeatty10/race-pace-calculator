@@ -11,6 +11,7 @@ function makePlan(splits: SplitResult[]): RacePlan {
     targetFinishTimeSec: 3600,
     computedFinishTimeSec: 3600,
     courseLengthMeters: 16093.44,
+    gpxDistanceMeters: 16093.44,
     totalClimbMeters: 100,
     totalDescentMeters: 100,
     flatEquivalentPaceSecPerMile: 360,

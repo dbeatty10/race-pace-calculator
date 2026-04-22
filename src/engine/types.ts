@@ -121,6 +121,8 @@ export interface PlanSummary {
   targetFinishTimeSec: number;
   computedFinishTimeSec: number;
   courseLengthMeters: number;
+  /** GPX-measured distance in meters. Equals courseLengthMeters when no official distance was provided. */
+  gpxDistanceMeters: number;
   totalClimbMeters: number;
   totalDescentMeters: number;
   flatEquivalentPaceSecPerMile: number;
@@ -164,4 +166,11 @@ export interface PlannerInput {
   splitMode?: SplitIntervalMode;
   /** Pre-converted to meters. Only used when splitMode is "custom_miles" or "custom_km". */
   customSplitDistancesM?: number[];
+  /**
+   * Official (certified) course distance in meters. When provided and different
+   * from the GPX distance, splits are labeled in official units and pace is
+   * shown per official mile. Omit or set to undefined/0 to use the GPX distance
+   * as-is.
+   */
+  officialDistanceM?: number;
 }

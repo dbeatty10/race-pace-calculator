@@ -12,10 +12,14 @@ export function computeSummary(
   results: SegmentResult[],
   model: PaceModel,
   targetFinishTimeSec: number,
-  planningMode: PlanningMode = "target_time"
+  planningMode: PlanningMode = "target_time",
+  gpxDistanceMeters?: number,
+  officialDistanceMeters?: number
 ): PlanSummary {
   const last = microsegments[microsegments.length - 1]!;
-  const courseLengthMeters = last.endDistance;
+  const gpxDist = gpxDistanceMeters ?? last.endDistance;
+  const officialDist = officialDistanceMeters ?? gpxDist;
+  const officialOverGpx = officialDist / gpxDist;
 
   let totalClimb = 0;
   let totalDescent = 0;
@@ -28,21 +32,19 @@ export function computeSummary(
   const lastResult = results[results.length - 1]!;
   const computedFinishTimeSec = lastResult.cumulativeElapsedSec;
 
-  // Weighted distance: sum(d_i * modelValue_i)
-  // For direct_multiplier: modelValue is the multiplier M
-  // For demand_model: modelValue is the hill speed vh; use distance sum as weighted distance
   const weightedDistance = results.reduce(
     (sum, r) => sum + r.distance * r.modelValue,
     0
   );
 
-  // Flat-equivalent pace
-  const flatEqPaceSecPerMeter =
+  const flatEqPaceSecPerMeterGpx =
     model.kind === "demand_model"
-      ? computedFinishTimeSec / courseLengthMeters
+      ? computedFinishTimeSec / gpxDist
       : targetFinishTimeSec / weightedDistance;
 
-  const flatEquivalentPaceSecPerMile = flatEqPaceSecPerMeter * METERS_PER_MILE;
+  // Scale to per-official-mile: pace_official = pace_gpx / (official/gpx)
+  const flatEquivalentPaceSecPerMile =
+    (flatEqPaceSecPerMeterGpx * METERS_PER_MILE) / officialOverGpx;
 
   return {
     planningMode,
@@ -50,7 +52,8 @@ export function computeSummary(
     modelLabel: model.label,
     targetFinishTimeSec,
     computedFinishTimeSec,
-    courseLengthMeters,
+    courseLengthMeters: officialDist,
+    gpxDistanceMeters: gpxDist,
     totalClimbMeters: totalClimb,
     totalDescentMeters: totalDescent,
     flatEquivalentPaceSecPerMile,
