@@ -169,8 +169,8 @@ export interface PlannerInput {
   /**
    * Official (certified) course distance in meters. When provided and different
    * from the GPX distance, splits are labeled in official units and pace is
-   * shown per official mile. Omit or set to undefined/0 to use the GPX distance
-   * as-is.
+   * shown per official mile. Leave undefined to use the GPX distance as-is.
+   * Must be > 0 if provided.
    */
   officialDistanceM?: number;
 }

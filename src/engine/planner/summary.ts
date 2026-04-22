@@ -17,8 +17,14 @@ export function computeSummary(
   officialDistanceMeters?: number
 ): PlanSummary {
   const last = microsegments[microsegments.length - 1]!;
-  const gpxDist = gpxDistanceMeters ?? last.endDistance;
-  const officialDist = officialDistanceMeters ?? gpxDist;
+  const gpxDist =
+    gpxDistanceMeters && gpxDistanceMeters > 0
+      ? gpxDistanceMeters
+      : last.endDistance;
+  const officialDist =
+    officialDistanceMeters && officialDistanceMeters > 0
+      ? officialDistanceMeters
+      : gpxDist;
   const officialOverGpx = officialDist / gpxDist;
 
   let totalClimb = 0;
